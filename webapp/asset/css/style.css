@@ -1,0 +1,75 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  font-size: 1.2em;
+  padding: 0;
+  margin: 0;
+  color: white;
+  /* color: #F3EDD3; */
+  background-color:#19BEC0;
+}
+
+#front-content {
+    margin: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    background-color:#19BEC0;
+}
+
+#front-content > div {
+    margin: auto;
+}
+
+#title-h, #subtitle-h{
+    margin:0;
+    padding: 0;
+    text-align: center;
+    /* text-shadow: 0px 4px 0px #113F59; */
+}
+
+#title-h {
+    font-size:4em;
+    font-weight: 900;
+}
+
+#connect-modal {
+    margin-top: 64px;
+}
+
+#connect-modal  h1 {
+    font-size:1.2em;
+    margin: 0;
+    /* text-shadow: 0px 2px 0px #113F59; */
+}
+
+#connect-modal form {
+    width: 50%;
+    margin: auto;
+    padding : 0px;
+    
+}
+
+#connect-modal input {
+    display:block;
+    padding: 8px;
+    border: 0px solid black;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+#connect-modal input[type="submit"]{
+    margin-top:24px;
+}
+
+#connect-modal input:not([type="submit"]){
+    width: 100%;
+}
