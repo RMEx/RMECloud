@@ -127,7 +127,7 @@ module Http
 
     def connect(session, prefix, port)
       connection = Lib::WinHttpConnect.call(session, prefix.to_ws, port, 0)
-      Exception.raise_if(connection, Exception::HttpConnectExceptio)
+      Exception.raise_if(connection, Exception::HttpConnectException)
       return connection
     end
 
