@@ -70,23 +70,32 @@ module Http
     define :HttpRequestException
     define :HttpSendQueryException
     define :HttpAddHeaderException
+    define :HttpReceptionException
 
   end
 
   # Win32API integration
   module Lib
-    GetLastError              = Win32API.new("Kernel32", "GetLastError", "", "I")
+    GetLastError              = Win32API.new('Kernel32','GetLastError', 'v', 'i')
     Download                  = Win32API.new('urlmon', 'URLDownloadToFile', 'LPPLL', 'L')
     State                     = Win32API.new('wininet','InternetGetConnectedState', 'ii', 'i')
     WinHttpOpen               = Win32API.new('winhttp','WinHttpOpen','pippi','i')
     WinHttpConnect            = Win32API.new('winhttp','WinHttpConnect','ppii','i')
     WinHttpOpenRequest        = Win32API.new('winhttp','WinHttpOpenRequest','pppppii','i')
-    WinHttpSendRequest        = Win32API.new('winhttp','WinHttpSendRequest','piiiiii','i')
-    WinHttpAddRequestHeaders  = Win32API.new('winhttp', 'WinHttpAddRequestHeaders', 'ppii', 'i')
+    WinHttpSendRequest        = Win32API.new('winhttp','WinHttpSendRequest','piipiii','i')
+    WinHttpAddRequestHeaders  = Win32API.new('winhttp','WinHttpAddRequestHeaders', 'ppii', 'i')
+    WinHttpReceiveResponse    = Win32API.new('winhttp','WinHttpReceiveResponse','pp','i')
+    WinHttpQueryDataAvailable = Win32API.new('winhttp','WinHttpQueryDataAvailable', 'pi', 'i')
+    WinHttpReadData           = Win32API.new('winhttp','WinHttpReadData','ppip','i')
+    WinHttpCloseHandle        = Win32API.new('winhttp','WinHttpCloseHandle', 'p','i')
   end
 
   # Singleton
   class << self
+
+    def max_query_size
+      1024000
+    end
 
     # Retreive Connection state
     def connected?
@@ -137,13 +146,40 @@ module Http
     def add_header_information(request, posts)
       if posts.length > 0
         hd      = "Content-Type: application/x-www-form-urlencoded\r\n"
-        header  = WinHttpAddRequestHeaders.call(
+        header  = Lib::WinHttpAddRequestHeaders.call(
           request, hd.to_ws,
           hd.length, 0 )
         Exception.raise_if(header, Exception::HttpAddHeaderException)
         return posts.map {|k, v| "#{k}=#{v}"}.join('&')
       end
-      return nil
+      return ""
+    end
+
+    def send_request(request, post)
+      result = Lib::WinHttpSendRequest.call(
+        request, 0, 0,
+        post, post.length, post.length, 0
+      )
+      Exception.raise_if(result, Exception::HttpSendQueryException)
+      return result
+    end
+
+    def receive_response(request)
+      response = Lib::WinHttpReceiveResponse.call(request, nil)
+      Exception.raise_if(response, Exception::HttpReceptionException)
+      return request
+    end
+
+    def query_available?(request)
+      return Lib::WinHttpQueryDataAvailable.call(request, 0)
+    end
+
+    def read(request)
+      buffer = [].pack("x#{max_query_size}")
+      output = [].pack('x4')
+      Lib::WinHttpReadData.call(request, buffer, max_query_size, output)
+      len    = output.unpack('i!')[0]
+      return buffer[0, len]
     end
 
   end
@@ -221,6 +257,29 @@ module Http
 
     def to_s
       uri(true)
+    end
+
+    def process_query(method = 'GET')
+      opened      = Http.open_session
+      connection  = Http.connect(opened, @prefix, @port)
+      request     = Http.open_request(connection, base_uri, method)
+      response    = yield(request) if block_given?
+      Lib::WinHttpCloseHandle.call(opened)
+      Lib::WinHttpCloseHandle.call(connection)
+      Lib::WinHttpCloseHandle.call(request)
+      clean
+      response
+    end
+
+    def query(method = 'GET')
+      process_query do |request|
+        post_data = ""
+        if method == 'POST'
+          post_data = Http.add_header_information(request, @post_variables)
+        end
+        Http.send_request(request, post_data)
+        return Http.read(request)
+      end
     end
 
     def download(target = nil)
