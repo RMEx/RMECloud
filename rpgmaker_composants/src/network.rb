@@ -71,6 +71,7 @@ module Http
     define :HttpSendQueryException
     define :HttpAddHeaderException
     define :HttpReceptionException
+    define :HttpUnavailableQueryException
 
   end
 
@@ -278,6 +279,11 @@ module Http
           post_data = Http.add_header_information(request, @post_variables)
         end
         Http.send_request(request, post_data)
+        Http.receive_response(request)
+        Exception.raise_if(
+          Http.query_available?(request),
+          Exception::HttpUnavailableQueryException
+        )
         return Http.read(request)
       end
     end
