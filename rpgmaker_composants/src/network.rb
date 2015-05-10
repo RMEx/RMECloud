@@ -69,18 +69,20 @@ module Http
     define :HttpConnectException
     define :HttpRequestException
     define :HttpSendQueryException
+    define :HttpAddHeaderException
 
   end
 
   # Win32API integration
   module Lib
-    GetLastError        = Win32API.new("Kernel32", "GetLastError", "", "I")
-    Download            = Win32API.new('urlmon', 'URLDownloadToFile', 'LPPLL', 'L')
-    State               = Win32API.new('wininet','InternetGetConnectedState', 'ii', 'i')
-    WinHttpOpen         = Win32API.new('winhttp','WinHttpOpen','pippi','i')
-    WinHttpConnect      = Win32API.new('winhttp','WinHttpConnect','ppii','i')
-    WinHttpOpenRequest  = Win32API.new('winhttp','WinHttpOpenRequest','pppppii','i')
-    WinHttpSendRequest  = Win32API.new('winhttp','WinHttpSendRequest','piiiiii','i')
+    GetLastError              = Win32API.new("Kernel32", "GetLastError", "", "I")
+    Download                  = Win32API.new('urlmon', 'URLDownloadToFile', 'LPPLL', 'L')
+    State                     = Win32API.new('wininet','InternetGetConnectedState', 'ii', 'i')
+    WinHttpOpen               = Win32API.new('winhttp','WinHttpOpen','pippi','i')
+    WinHttpConnect            = Win32API.new('winhttp','WinHttpConnect','ppii','i')
+    WinHttpOpenRequest        = Win32API.new('winhttp','WinHttpOpenRequest','pppppii','i')
+    WinHttpSendRequest        = Win32API.new('winhttp','WinHttpSendRequest','piiiiii','i')
+    WinHttpAddRequestHeaders  = Win32API.new('winhttp', 'WinHttpAddRequestHeaders', 'ppii', 'i')
   end
 
   # Singleton
@@ -132,7 +134,17 @@ module Http
       return request
     end
 
-    # To be continued :D 
+    def add_header_information(request, posts)
+      if posts.length > 0
+        hd      = "Content-Type: application/x-www-form-urlencoded\r\n"
+        header  = WinHttpAddRequestHeaders.call(
+          request, hd.to_ws,
+          hd.length, 0 )
+        Exception.raise_if(header, Exception::HttpAddHeaderException)
+        return posts.map {|k, v| "#{k}=#{v}"}.join('&')
+      end
+      return nil
+    end
 
   end
 
@@ -141,14 +153,16 @@ module Http
 
     attr_accessor :prefix
     attr_accessor :path
-    attr_accessor :variables
+    attr_accessor :get_variables
+    attr_accessor :post_variables
     attr_accessor :port
 
     def initialize(hash)
-      @prefix     = hash[:prefix]
-      @path       = hash[:path] || []
-      @port       = hash[:port] || 80
-      @variables  = hash[:variables] || {}
+      @prefix           = hash[:prefix]
+      @path             = hash[:path] || []
+      @port             = hash[:port] || 80
+      @post_variables   = hash[:post_variables] || {}
+      @get_variables    = hash[:get_variables] || {}
     end
 
     def clone
@@ -156,20 +170,23 @@ module Http
         prefix: @prefix.dup,
         path: @path.dup,
         port: @port,
-        variables: @variables.dup
+        get_variables: @get_variables.dup,
+        post_variables: @post_variables.dup,
       )
     end
 
     def clean
-      @variables = {}
+      @post_variables = {}
+      @get_variables = {}
     end
 
-    def set_variable(name, value)
-      @variables[name] = value
+    def set_get_variable(name, value)
+      @get_variables[name] = value
     end
 
-    alias_method(:[]=, :set_variable)
-    alias_method(:build_query, :variables=)
+    def set_post_variable(name, value)
+      @post_variables[name] = value
+    end
 
     def add_directory(name)
       @path << name
@@ -181,9 +198,9 @@ module Http
       path    = @path.join('/')
       prefix  += '/' unless path == ''
       prefix  += path
-      unless @variables.empty?
+      unless @get_variables.empty?
         result    += '?'
-        vars      = @variables.to_a.map {|k, v| "#{k}=#{v}"}
+        vars      = @get_variables.to_a.map {|k, v| "#{k}=#{v}"}
         prefix    += vars.join('&')
       end
       prefix
