@@ -21,6 +21,16 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 =end
 
+class String
+  def to_ws
+    result = ""
+    (0..self.size).each do |i|
+      result += self[i, 1] + "\0" unless self[i] == "\0"
+    end
+    return result
+  end
+end
+
 module Http
 
   # Micro protocol list
@@ -29,7 +39,7 @@ module Http
     80    => :http,
     443   => :https
   }
-  
+
   # Exception
   module Exception
 
@@ -43,19 +53,34 @@ module Http
       def download_failure(message = '')
         raise DownloadFailure.new(message)
       end
+      def retreive_error
+        sprintf("0x%.8X", GetLastError.call)
+      end
+      def raise_if(v, e)
+        raise e.new(Exception.retreive_error) unless v
+      end
     end
 
     # Local exception
     define :MalformedCall
     define :DownloadFailure
     define :NotConnected
-    
+    define :HttpOpenException
+    define :HttpConnectException
+    define :HttpRequestException
+    define :HttpSendQueryException
+
   end
 
   # Win32API integration
   module Lib
-    Download = Win32API.new('urlmon', 'URLDownloadToFile', 'LPPLL', 'L')
-    State = Win32API.new('wininet','InternetGetConnectedState', 'ii', 'i')
+    GetLastError        = Win32API.new("Kernel32", "GetLastError", "", "I")
+    Download            = Win32API.new('urlmon', 'URLDownloadToFile', 'LPPLL', 'L')
+    State               = Win32API.new('wininet','InternetGetConnectedState', 'ii', 'i')
+    WinHttpOpen         = Win32API.new('winhttp','WinHttpOpen','pippi','i')
+    WinHttpConnect      = Win32API.new('winhttp','WinHttpConnect','ppii','i')
+    WinHttpOpenRequest  = Win32API.new('winhttp','WinHttpOpenRequest','pppppii','i')
+    WinHttpSendRequest  = Win32API.new('winhttp','WinHttpSendRequest','piiiiii','i')
   end
 
   # Singleton
@@ -65,12 +90,12 @@ module Http
     def connected?
       Lib::State.call(0, 0) == 1
     end
-    
+
     # Retreive base name of an uri
     def base_name(url)
       url.split('/')[-1]
     end
-    
+
     # Download file from url to destination
     # Example : Http.download from:my_url, to:my_target
     def download(hash)
@@ -82,7 +107,33 @@ module Http
         Exception.download_failure("#{from} could not be downloaded")
       end
     end
-    
+
+    def open_session
+      opened = Lib::WinHttpOpen.call("RPG Maker VX Ace", 0, '', '', 0)
+      Exception.raise_if(opened, Exception::HttpOpenException)
+      return opened
+    end
+
+    def connect(session, prefix, port)
+      connection = Lib::WinHttpConnect.call(session, prefix.to_ws, port, 0)
+      Exception.raise_if(connection, Exception::HttpConnectExceptio)
+      return connection
+    end
+
+    def open_request(connection, path, method = 'GET')
+      request = Lib::WinHttpOpenRequest.call(
+        connection,
+        method.to_ws,
+        path.to_ws,
+        'HTTP/1.1'.to_ws,
+        '', 0, 0x00800000
+      )
+      Exception.raise_if(request, Exception::HttpRequestException)
+      return request
+    end
+
+    # To be continued :D 
+
   end
 
   # Describe a web resource
@@ -92,7 +143,7 @@ module Http
     attr_accessor :path
     attr_accessor :variables
     attr_accessor :port
-    
+
     def initialize(hash)
       @prefix     = hash[:prefix]
       @path       = hash[:path] || []
@@ -160,5 +211,5 @@ module Http
     end
 
   end
-  
+
 end
