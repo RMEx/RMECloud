@@ -57,7 +57,6 @@ module Http
         sprintf("0x%.8X", Lib::GetLastError.call)
       end
       def raise_if(v, e)
-        p [v, e]
         raise e.new(Exception.retreive_error) if !v
       end
     end
@@ -274,7 +273,7 @@ module Http
     end
 
     def query(method = 'GET')
-      process_query do |request|
+      process_query(method) do |request|
         post_data = ""
         if method == 'POST'
           post_data = Http.add_header_information(request, @post_variables)
