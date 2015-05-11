@@ -54,10 +54,11 @@ module Http
         raise DownloadFailure.new(message)
       end
       def retreive_error
-        sprintf("0x%.8X", GetLastError.call)
+        sprintf("0x%.8X", Lib::GetLastError.call)
       end
       def raise_if(v, e)
-        raise e.new(Exception.retreive_error) unless v
+        p [v, e]
+        raise e.new(Exception.retreive_error) if !v
       end
     end
 
@@ -132,13 +133,13 @@ module Http
       return connection
     end
 
-    def open_request(connection, path, method = 'GET')
+    def open_request(connection, path, secure, method = 'GET')
       request = Lib::WinHttpOpenRequest.call(
         connection,
         method.to_ws,
         path.to_ws,
         'HTTP/1.1'.to_ws,
-        '', 0, 0x00800000
+        '', 0, (secure ? 0x00800000 : 0)
       )
       Exception.raise_if(request, Exception::HttpRequestException)
       return request
@@ -263,7 +264,7 @@ module Http
     def process_query(method = 'GET')
       opened      = Http.open_session
       connection  = Http.connect(opened, @prefix, @port)
-      request     = Http.open_request(connection, base_uri, method)
+      request     = Http.open_request(connection, base_uri, @port == 443, method)
       response    = yield(request) if block_given?
       Lib::WinHttpCloseHandle.call(opened)
       Lib::WinHttpCloseHandle.call(connection)
