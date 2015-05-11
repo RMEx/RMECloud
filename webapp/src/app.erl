@@ -13,12 +13,9 @@ rest_controller(_, _, ["front"]) -> template:front();
 %% Controller of application
 rest_controller(Arg, Method, Path) ->
     layout:content(
-      Path, "RMECloud: connect RMVXAce around the World",
+      Path, "title",
       [
-       {h1, [], ["RMECloud!"]}, 
+       {h1, [], ["Page test"]}, 
        {h2, [], ["Test routing"]}
       ]
      ).
-
-
-

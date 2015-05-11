@@ -12,12 +12,12 @@ all: run
 
 # Module to compile
 DEP_A = uri.beam util.beam template.beam layout.beam app.beam
-DEP_B = crypter.beam initialize.beam
+DEP_B = crypter.beam initialize.beam state.beam
 DEPENDANCIES = $(DEP_A) $(DEP_B)
 
 # Compilers
 %.beam : src/%.erl
-	erlc -o $(BIN) -I $(INC) $(<) 
+	erlc -o $(BIN) -I $(INC) $(<)
 
 # Yaws runner
 run: compile
