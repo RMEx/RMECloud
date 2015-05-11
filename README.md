@@ -1,4 +1,4 @@
-# [![RMEx](http://rmex.github.io/images/rmex-shortcut.png)](http://rmex.github.io) [RMECloud](http://rmex.github.io/)
+# [![RMEx](http://rmex.github.io/images/rmex-shortcut.png)](http://rmex.github.io) RMECloud
 Connect RME around the world
 
 ## Local run
