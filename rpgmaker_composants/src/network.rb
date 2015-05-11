@@ -6,7 +6,7 @@
 =begin
 RMEBuilder - Http
 Copyright (C) 2015 Nuki <xaviervdw AT gmail DOT com>
-Copyright (C) 2015 Grim <grimimi AT gmail DOT com>
+Copyright (C) 2015 Grim <grimfw AT gmail DOT com>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -83,7 +83,7 @@ module Http
     WinHttpOpen               = Win32API.new('winhttp','WinHttpOpen','pippi','i')
     WinHttpConnect            = Win32API.new('winhttp','WinHttpConnect','ppii','i')
     WinHttpOpenRequest        = Win32API.new('winhttp','WinHttpOpenRequest','pppppii','i')
-    WinHttpSendRequest        = Win32API.new('winhttp','WinHttpSendRequest','piipiii','i')
+    WinHttpSendRequest        = Win32API.new('winhttp','WinHttpSendRequest','piipiip','i')
     WinHttpAddRequestHeaders  = Win32API.new('winhttp','WinHttpAddRequestHeaders', 'ppii', 'i')
     WinHttpReceiveResponse    = Win32API.new('winhttp','WinHttpReceiveResponse','pp','i')
     WinHttpQueryDataAvailable = Win32API.new('winhttp','WinHttpQueryDataAvailable', 'pi', 'i')
@@ -149,7 +149,7 @@ module Http
         hd      = "Content-Type: application/x-www-form-urlencoded\r\n"
         header  = Lib::WinHttpAddRequestHeaders.call(
           request, hd.to_ws,
-          hd.length, 0 )
+          hd.length, 0)
         Exception.raise_if(header, Exception::HttpAddHeaderException)
         return posts.map {|k, v| "#{k}=#{v}"}.join('&')
       end
@@ -159,7 +159,7 @@ module Http
     def send_request(request, post)
       result = Lib::WinHttpSendRequest.call(
         request, 0, 0,
-        post, post.length, post.length, 0
+        post, post.length, post.length, nil
       )
       Exception.raise_if(result, Exception::HttpSendQueryException)
       return result
@@ -236,7 +236,7 @@ module Http
       prefix  += '/' unless path == ''
       prefix  += path
       unless @get_variables.empty?
-        result    += '?'
+        prefix    += '?'
         vars      = @get_variables.to_a.map {|k, v| "#{k}=#{v}"}
         prefix    += vars.join('&')
       end
