@@ -51,25 +51,45 @@ body {
     /* text-shadow: 0px 2px 0px #113F59; */
 }
 
-#connect-modal form {
+#connect-modal form, #connect-modal div {
     width: 50%;
     margin: auto;
     padding : 0px;
-    
+
+}
+
+#connect-modal div {
+  padding-bottom: 24px;
+}
+
+#connect-modal > div > a {
+    border-radius: 8px;
+    background-color: white;
+    padding: 8px;
+    color: #19BEC0;
+    font-weight: 900;
+    text-decoration: none;
 }
 
 #connect-modal input {
     display:block;
     padding: 8px;
-    border: 0px solid black;
+    border: 0px solid red;
     border-radius: 8px;
     margin-top: 12px;
 }
 
 #connect-modal input[type="submit"]{
     margin-top:24px;
+    background-color: #BDCF2D;
+    color: #D9FFA8;
+    font-weight: 900;
 }
 
 #connect-modal input:not([type="submit"]){
     width: 100%;
+}
+
+.right-align {
+  text-align: right;
 }

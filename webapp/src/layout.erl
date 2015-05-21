@@ -4,14 +4,14 @@
 
 
 %% Simple page description
-page(Path, Body) -> 
+page(Path, Body) ->
     page(Path, [], Body).
 page(Path, Head, Body) -> page(Path, Head, [], Body).
 page(Path, Head, BArgs, Body) ->
-    {ehtml, 
+    {ehtml,
      [
       <<"<!DOCTYPE html><html>">>,
-      {head, [], Head}, 
+      {head, [], Head},
       {body, BArgs, Body},
       <<"</html>">>
      ]
@@ -20,21 +20,39 @@ page(Path, Head, BArgs, Body) ->
 %% Container description
 content(Path, Title, Body) ->
     page(
-      Path, 
+      Path,
       [
        {title, [], [Title]},
-       {meta, [{charset, "utf-8"}]}, 
+       {meta, [{charset, "utf-8"}]},
        link_css(
          "http://fonts.googleapis.com/css?"
          ++ "family=Lato:400,700,900,400italic,700italic,900italic"
          ++ "&subset=latin,latin-ext"
         ),
        link_css(uri:root(Path, "asset/css/style.css"))
-      ], 
+      ],
       Body).
 
 
 %% Helpers
 link_css(Url) ->
-    {link, 
+    {link,
      [{rel, "stylesheet"}, {type, "text/css"}, {href, Url}]}.
+
+%% Create front_page
+create_frontpage(Path, Content) ->
+  content(
+      Path, "RMECloud: connect RPGMaker VXAce around the World!",
+      [
+        {'div', [{id, "front-content"}],
+          [
+            {'div', [],
+              [
+                {h1, [{id, "title-h"}], ["RMECloud"]},
+                {h2, [{id, "subtitle-h"}],
+                ["Connect RPGMaker VXAce around the World !"]}
+              ] ++ Content
+            }
+          ]
+        }
+      ]).

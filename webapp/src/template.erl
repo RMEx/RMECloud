@@ -3,42 +3,45 @@
 -include("yaws_api.hrl").
 
 %% Front page
-front() ->
-    layout:content(
-      ["front"], "RMECloud: connect RPGMaker VXAce around the World!", 
+front(Path) ->
+    layout:create_frontpage(
+      Path,
       [
-       {'div', [{id, "front-content"}], 
-        [
-         {'div', [], 
-          [
-           {h1, [{id, "title-h"}], ["RMECloud"]}, 
-           {h2, [{id, "subtitle-h"}], 
-            ["Connect RPGMaker VXAce around the World !"]}, 
-           {'div', [{id, "connect-modal"}],
-            [
-             {form, [], 
-              [
-               {input, 
-                [
-                 {type, "text"},
-                 {name, "nickname"}, 
-                 {placeholder, "your nickname"}
-                ]},
-               {input, 
-                [
-                 {type, "password"},
-                 {name, "password"}, 
-                 {placeholder, "your password"}
-                ]},
-               {input, 
-                [
-                 {type, "submit"},
-                 {name, "validation"}, 
-                 {value, "Connection"}
-                ]}
-              ]}
+       {'div', [{id, "connect-modal"}],
+	      [
+	       {'div', [{class, "right-align"}],
+	        [{a, [{href, "register"}], ["Sign up"]}]},
+         {form, [],
+	        [
+	         {input,
+	          [
+	           {type, "text"},
+             {name, "nickname"},
+             {placeholder, "your nickname"}
+            ]},
+           {input,
+	          [
+	           {type, "password"},
+             {name, "password"},
+             {placeholder, "your password"}
+            ]},
+           {input,
+	          [
+	           {type, "submit"},
+             {name, "validation"},
+             {value, "Connection"}
             ]}
-          ]}
-        ]}
+           ]}
+          ]
+        }
       ]
-     ).
+    ).
+
+
+%% Front page
+register() ->
+  layout:create_frontpage(
+    ["register"],
+    [
+
+    ]).
