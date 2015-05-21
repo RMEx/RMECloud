@@ -9,10 +9,12 @@ out(Arg) ->
     rest_controller(Arg, Method, Path).
 
 %% Front page
-rest_controller(_, _, [])             -> template:front([]);
-rest_controller(_, _, ["front"])      -> template:front(["front"]);
+rest_controller(_, _, []) -> template:front([]);
+rest_controller(_, _, ["front"]) -> template:front(["front"]);
 %% Regsiter page
-rest_controller(_, _, ["register"])   -> template:register();
+rest_controller(_, _, ["register"]) -> template:register(["register"]);
+rest_controller(Arg, _, ["register", "process"]) ->
+  template:register(["register", "process"]);
 %% Controller of application
 rest_controller(Arg, Method, Path)    ->
     layout:content(
